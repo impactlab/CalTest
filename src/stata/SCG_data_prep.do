@@ -1,7 +1,10 @@
 *get_scg_11dec2013_1034.log 11dec2013 1034 
+set more off
 
 *define path
 local dataPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/"
+local rawPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/rawfiles/"
+local savePath = "/Users/matthewgee/Projects/CalTest/data/scgdata/FinalData/"
 
 *define file
 *local energyUse = 
@@ -11,7 +14,7 @@ local dataPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/"
 cd `dataPath'
 
  clear
- import excel using "Adv Path Energy Usage and Meter Read Dates 121013 mb.xlsx", firstrow
+ import excel using "`dataPath'Adv Path Energy Usage and Meter Read Dates 121013 mb.xlsx", firstrow
  unab vars: D - EM
  local cnt: word count `vars'
 
@@ -32,7 +35,7 @@ cd `dataPath'
  gen yr=year(date)
  count if yr>2013 & yr<.
 
- uniq Vision if yr>2013 & yr<.
+ *uniq Vision if yr>2013 & yr<.
 
 
 
@@ -43,7 +46,7 @@ cd `dataPath'
 ******************************************
 
  drop _all
- import excel using "scg billing data gas72_2013.xlsx",  firstrow
+ import excel using "`rawPath'scg billing data gas72_2013.xlsx",  firstrow
  rename *ThmQty *use
  rename *use use*
 
