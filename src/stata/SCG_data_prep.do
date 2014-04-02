@@ -3,7 +3,7 @@ set more off
 
 *define path
 local dataPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/"
-local rawPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/rawfiles/"
+local rawPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/raw files/"
 local savePath = "/Users/matthewgee/Projects/CalTest/data/scgdata/FinalData/"
 
 *define file
@@ -73,7 +73,7 @@ cd `dataPath'
 **************************************************
 
  drop _all
- import excel using "scg billing data gas72_20102012.xlsx",  firstrow
+ import excel using "`rawPath'scg billing data gas72_20102012.xlsx",  firstrow
  rename *ThmQty *use
  rename *use use*
  local i=1
@@ -108,12 +108,11 @@ cd `dataPath'
  sort vision date
  save gas72_alluse_new, replace
 
- file gas72_alluse.dta saved
 
 **********************************************************************
 
  drop _all
- import excel using "SoCalGas EUC Software Project Data_2013_11_11_rev2 (2) gas72withdates.xlsx", firstrow
+ import excel using "`rawPath'SoCalGas EUC Software Project Data_2013_11_11_rev2 (2) gas72withdates.xlsx", firstrow
  foreach var of varlist Floors PreFloorRValue PreWallRValue PreDuctRValue PreWindowUValue PreWindowSHGC PreGasFurnaceAFUE PostCeilingRValue2 PreCeilingRValue1 PreCeilingRValue2 {
    replace `var'="EP only" if strpos(`var',"EP file Only")
    }
@@ -133,8 +132,6 @@ cd `dataPath'
  rename _all, lower
  save, replace
 
- file SCGEUC2013_11_11_rev2_gas72withdates_new.dta saved
-
  rename weatherstation zip
  destring yearbuilt area, replace
  drop floors
@@ -142,11 +139,11 @@ cd `dataPath'
  rename waterheatingfuel dhw_fuel
  rename heatingfuel ht_fuel
  rename centralacyesno centralac
- yesno centralac
+ *yesno centralac
  destring projectedgassavingsthermsyr projectedelectricsavingskwhy, replace
  rename projectedgassavingsthermsyr projsavegas
  rename projectedelectricsavingskwhy projsaveelec
- killdbl
+ *killdbl
  destring preshellcfm50leakage, replace force
  rename preshellcfm50leakage cfm50_pre
  replace preductcfm25 ="EP only" if strpos( preductcfm25,"EP file Only")
@@ -158,7 +155,7 @@ cd `dataPath'
  compress
 
 
- yesno retrofitacreplace- retrofitother
+ *yesno retrofitacreplace- retrofitother
  label def yesno01 0"No" 1"Yes", modify
  rename retrofit* retro*
  rename  *insulation* *ins*
@@ -205,9 +202,12 @@ drop gasutility r_other prewin_shgc
  rename auditstartdate auditdate
  format auditdate compdate_apponline compdate_appsubmit %td
 
+ ****
+ 
+ 
  save projectinfo_gas72_new, replace
  
- outsheet using "SCG_cleaned_gas72_new.csv", comma
+ outsheet using "`savePath'SCG_cleaned_gas72_new.csv", comma
  
  
 
