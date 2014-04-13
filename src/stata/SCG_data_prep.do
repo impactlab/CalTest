@@ -4,7 +4,7 @@ set more off
 *define path
 local dataPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/"
 local rawPath = "/Users/matthewgee/Projects/CalTest/data/scgdata/raw files/"
-local savePath = "/Users/matthewgee/Projects/CalTest/data/scgdata/FinalData/"
+local savePath = "/Users/matthewgee/Projects/CalTest/data/scgdata/final/"
 
 *define file
 *local energyUse = 
@@ -43,6 +43,8 @@ cd `dataPath'
  
  save Usage121013mb_long_new, replace
 
+ 
+ 
 ******************************************
 
  drop _all
@@ -171,8 +173,8 @@ cd `dataPath'
  rename prewinshgc prewin_shgc
  rename pregasfurnaceafue pre_afue
 
- drop prefloor_r prewall_r prewin_u
-drop gasutility r_other prewin_shgc
+ *drop prefloor_r prewall_r prewin_u
+ *drop gasutility r_other prewin_shgc
  replace pre_afue="" if real(pre_afue)==0
  replace preacseer="EP only" if strpos( preacseer,"EP file Only")
  replace postductcfm25 ="EP only" if strpos( postductcfm25,"EP file Only")
@@ -207,9 +209,30 @@ drop gasutility r_other prewin_shgc
  
  save projectinfo_gas72_new, replace
  
- outsheet using "`savePath'SCG_cleaned_gas72_new.csv", comma
+ outsheet using "`savePath'SCG_cleaned_gas72_new.csv", comma replace
  
  
+ ******************************************************************************
+ **************Take use data and perform prism weather adjustment**************
+ 
+ /* there are now 4 key SCG Datasets
+ Usage121013mb_long_new : electricty use
+ gas72_alluse_new : gas use for the 72 homes
+ projectinfo_gas72_new : the project infromation data
 
+ 
+ The data need the following done to them: 
 
+ merge the retrofit completion date with the use data
+ create phase times
+ do weather adjustment
+ calculate change in use 
+ calculate realization rate
+ 
+ add realization rate
+ */
+ 
+ **Get the project completion date
+ 
+ 
  

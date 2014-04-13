@@ -90,6 +90,11 @@ To parse the
 *scripts that perform scg data prep*
 
 	- SCGDataPrep.py
+
+*Combined data*
+
+	- gas72_alluse_new
+
 	
 ####Weather Data Prep
 
