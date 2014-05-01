@@ -39,7 +39,7 @@ rename	XML_Ductloc1	duct_location
 				
 rename	XML_HeatingEfficiency	gas_furnace_efficiency_existing		
 rename	pre_ac	central_AC_existing		
-rename	XML_DesignCoolingCapacity	cooling_capacity_existing		
+rename	XML_CoolingEfficiency	cooling_efficiency_existing		
 rename	pre_r_duct	duct_insulation_r_existing		
 rename	pre_cfm25duct	duct_leakage_existing		
 rename	hwtype1	water_heater_type_existing		
@@ -87,9 +87,8 @@ gen		door_area_south	=	.
 				
 gen		retrofit_measures_other_existing	=	.
 gen		retrofit_measures_other_new	=	.
-rename	auditdate	retrofit_start_date		
-rename	testoutdate	retrofit_end_date		
-rename	record	gas_raw_id		
+rename	auditdate	audit_date	
+rename	testoutdate	retrofit_end_date			
 gen		electric_raw_id	=	.
 rename	station	weather_station		
 				
@@ -106,7 +105,6 @@ rename	projelecsave	projected_elec_savings
 rename	projsvgas	projected_gas_savings		
 rename	Grealize	gas_realization		
 rename	Erealize	elec_realization		
-
 ***********************************
 ** Ensure data has use normalized**
 ***********************************
@@ -114,13 +112,13 @@ rename	Erealize	elec_realization
 *************************************
 ** Ensure realization is calculated**
 *************************************
-*it is*
+
 
 *************************************
 ** Get rid of problematic variables**
 *************************************
 drop xmldata gas1 gas2 gas3 gas4 gas5 elec1 elec2 elec3 elec4 elec5
-drop XML*
+*drop XML*
 drop res1
 
 ******************************************
@@ -129,9 +127,12 @@ drop res1
 replace contractor = upper(contractor)
 merge m:1 contractor using `contractorList'
 drop if _merge==2
+
+order record xml_file_name jobid cont2 city grosssqft elecutility gasutility audit_date total_savings electricity_savings gas_savings projected_elec_savings projected_gas_savings
 *************************************
 ** Save              ****************
 *************************************
 
 outsheet using "`savePath'pge_CalTest_data_prepped.csv", comma replace
+
 
