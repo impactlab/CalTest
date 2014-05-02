@@ -37,7 +37,25 @@ foreach i of num 1/`groups' {
 *keep if testmonth==1
 gen use_phase0 =.
 gen use_phase1=.
+gen total_use_phase0 = .
+gen total_use_phase1 = .
+
 replace use_phase0=use_norm if phase==0
 replace use_phase1=use_norm if phase==1
+
+if "`util'"=="gas" {
+
+	replace total_use_phase0=tot_therms if phase==0
+	replace total_use_phase0=tot_therms if phase==0
+	replace total_use_phase1=tot_therms if phase==1
+	}
+else {
+
+	replace total_use_phase0=tot_kwh if phase==0
+	replace total_use_phase1=tot_kwh if phase==1	
+	
+	}
+	
+
 
 end

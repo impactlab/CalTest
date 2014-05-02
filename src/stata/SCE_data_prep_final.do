@@ -330,7 +330,7 @@ rename	compdate_apponline	retrofit_date
 *rename	siteid	electric_id	
 gen		weather_station	=.
 			
-rename		contractorcompany	= contractor
+rename		contractorcompany	 contractor
 gen		xml_file_name	=.
 			
 gen		gas_heat =.	
@@ -342,10 +342,7 @@ gen		gas_savings	=.
 *rename	projsaveelec	projected_elec_savings	
 *rename	projsavegas	projected_gas_savings	
 gen		projsaveelec	=.
-gen		projsavegas	=.
-gen		gas_realization	= -1 + (2+1)*runiform()
-gen		elec_realization	= -1 + (2+1)*runiform()
-			
+gen		projsavegas	=.		
 
 ******************************
 *Replace energy pro values**
@@ -662,7 +659,8 @@ compare_periods, idvar("visionnumber") datevar("bill_start_date") usevar("avg_da
 
 #delimit;
 collapse (count) test_period_length=zipcode (first)pre_conditioned_area wthrstationnum zipcode r2 
-		(mean) upd avg_daily_therms use_norm use_phase0 use_phase1
+		(mean) upd avg_daily_therms use_norm use_phase0 use_phase1 tot_use_phase0 tot_use_phase1
+		(sum) tot_therms
 		, by(visionnumber);
 #delimit cr
 
@@ -681,17 +679,19 @@ save `gasData', replace
 *****************************************************
 use `elecData', clear
 
-compare_periods, idvar("visionnumber") datevar("bill_start_date") usevar("avg_daily_therms") util("gas") minlength(12)
+compare_periods, idvar("visionnumber") datevar("bill_start_date") usevar("avg_daily_kwh") util("elec") minlength(12)
 
 #delimit;
 collapse (count) test_period_length=zipcode (first)pre_conditioned_area wthrstationnum zipcode r2 
-		(mean) upd avg_daily_kwh use_norm use_phase0 use_phase1
+		(mean) upd avg_daily_kwh use_norm use_phase0 use_phase1 tot_use_phase0 tot_use_phase1
+			(sum) tot_kwh
 		, by(visionnumber);
 #delimit cr
 
 keep if test_period_length>=24
 gen energy_intensity_elec = use_norm / pre_conditioned_area
 gen elec_realized_savings = (use_phase0 - use_phase1)/use_phase0
+
 
 outsheet using `finalElecData', comma replace
 
@@ -722,6 +722,7 @@ drop _merge
 
 ****************************************
 ***********Final renaming***************
+drop electricity_savings gas_savings
 
 rename elec_realized_savings electricity_savings
 rename gas_realized_savings gas_savings
