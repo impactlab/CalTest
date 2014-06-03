@@ -16,7 +16,7 @@ local xmlSavingsData = "xmlpreuse.dta"
 local xmlProjectData = "sdge_combined_XML_values.csv"
 local rawProjectData = "sdge_track1.dta"
 local rawProjectData2 = "sdge_track2.dta"
-local measureData = "All_job_data_9-23-13.xlsx"
+local rawMeasureData = "All_job_data_9-23-13.xlsx"
 local contractorData = "SDGEPreferredContractorList.csv"
 local linkData = "SDG&E CalTEST home data April2014.csv"
 local rawGasData = "sdge wo46 gas bills.csv"
@@ -36,6 +36,8 @@ tempfile elecData
 local finalProjectData = "`saveDIR'sdge_project_data_prepped.csv"
 local finalGasData = "`saveDIR'sdge_gas_prepped.csv"
 local finalElecData = "`saveDIR'sdge_elec_prepped.csv"
+local gas_clean = "`saveDIR'sdge_gas_clean.csv"
+local elec_clean = "`saveDIR'sdge_elec_clean.csv"
 
 ***Authoritative dataset***
 local finalData = "/Users/matthewgee/Projects/CalTest/data/final/sdge_CalTest_data_prepped.csv"
@@ -157,8 +159,11 @@ save `projectData', replace
 
 ******************************************************
 ****consider collapsing by measure to get hvac, etc***
+clear
+import excel using "`rawMeasureData'", firstrow
 
 
+************************************
 *get climate data from prepped file
 
 use `rawProjectData2', clear
@@ -304,6 +309,14 @@ gen station = wthrfile
 
 save `gasData', replace
 
+*create raw data for output
+gen date = bill_end_date
+format date  %tdnn/dd/yy
+gen therms = tot_therms
+
+keep account_number date therms
+
+outsheet using "`gas_clean'", comma replace
 
 ****Prepare Elec*****
 
@@ -354,6 +367,17 @@ gen station = wthrfile
 *save for after normalization
 
 save `elecData', replace
+
+
+*create raw data for output
+gen date = bill_end_date
+format date  %tdnn/dd/yy
+gen kwh = tot_kwh
+
+keep account_number date kwh
+
+outsheet using "`elec_clean'", comma replace
+
 
 ******************************************
 ****** Calculate Savings  ****************
@@ -509,7 +533,7 @@ save `gasData', replace
 *****Construct balanced before and after phase panel
 use `elecData', clear
 
-compare_periods, idvar("account_number") datevar("bill_start_date") usevar("avg_daily_kwh") util("gas") minlength(12)
+compare_periods, idvar("account_number") datevar("bill_start_date") usevar("avg_daily_kwh") util("elec") minlength(12)
 
 
 #delimit;
@@ -622,7 +646,7 @@ gen		electric_id	=	.
 rename	stationnum	weather_station		
 				
 rename	company	contractor		
-rename	name	xml_file_name		
+cap rename	name	xml_file_name		
 				
 gen		gas_heat	=	.
 gen		gas_hotwater	=	.
