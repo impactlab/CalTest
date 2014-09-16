@@ -3,11 +3,14 @@ local selected = "/Users/matthewgee/Projects/CalTest/data/selected/CalTest_selec
 local weatherstation = "/Users/matthewgee/Projects/CalTest/data/weather/WeatherFileData.csv"
 tempfile weather
 
+local saveFile = "/Users/matthewgee/Projects/CalTest/data/selected/CalTest_selected_homes_combined_clean.csv"
+
 set more off
 
 clear 
 insheet using `weatherstation', comma names 
 duplicates drop zipcode, force
+gen stationname = wthrfile
 save `weather', replace
 
 clear
@@ -81,7 +84,8 @@ replace 	window_type_new	=	""	if	iou	==	"SCE"	|	iou	==	"SCG"
 replace 	retrofit_measures_other_new	=	""	if	iou	==	"SCE"	|	iou	==	"SCG"
 replace 	retrofit_start_date	=	""	if	iou	==	"SCE"	|	iou	==	"SCG"
 replace 	retrofit_end_date	=	retrofit_complete_date	if	iou	==	"SCE"	|	iou	==	"SCG"
-replace 	weather_station	=	wthrfile	if	iou	==	"SCE"	|	iou	==	"SCG"
+replace 	weather_station	=	stationname	/// if	iou	==	"SCE"	|	iou	==	"SCG"
+
 replace 	duct_insulation_r_existing	=	ductrvalue	if	iou	==	"SCE"	|	iou	==	"SCG"
 replace 	gas_furnace_efficiency_existing	=	heatingefficiency	if	iou	==	"SCE"	|	iou	==	"SCG"
 
@@ -98,4 +102,4 @@ replace 	volume	=	ceiling_height*pre_conditioned_area	if	iou	==	"SCE"	|	iou	==	"
 *replace pge values
 
 
-
+outsheet using `saveFile', comma replace

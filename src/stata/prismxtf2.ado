@@ -1,7 +1,13 @@
+cap program drop prismxtf2
 program define prismxtf2
 version 11.1
-*! v 1.2 24-Jul-2011 M Blasnik -- fixed Tref heating/cooling models
+***************PRISMxtf2.ado****************************
+**********Calculates realized savings based on 
+*! v 1.4 24-April-2014 M Gee + M Blasnik -- fixed combined model output
 * must have weather station variable "station"
+* necessary variables
+* 
+
 syntax [if] [in] , saving(str) by(str) [ TH(int 60) TC(int 0) HEatonly ]
 
 tempfile work idlist
@@ -24,6 +30,7 @@ quietly {
 
 
 * clean up and collect some case level info
+no count
 sort `by' date
 by `by': drop if (upd==. & _n>1) | upd<0
 by `by': gen begdate=date[1]
@@ -32,7 +39,7 @@ drop if upd==.
 by `by': gen nreads=_N
 egen grpid=group(`by')
 save `work', replace
-
+no count
 by `by': keep if _n==_N
 keep  grpid `by' nreads begdate enddate station
 save `idlist', replace
@@ -72,16 +79,24 @@ while `j'<=_N {
 					local r2=e(r2)
 				}
 		}
-				if `th'>0 & `skip'==0 {
+				if (`th'>0 & `tc'==0) {
 					local htsl=_b[`hdd']
 				  local seht=_se[`hdd']
 				  post `out' (`id') (`r2') (`base') (`sebs') (`th') (`htsl') (`seht') (`covar') 
 				}
-				if `tc'>0 {
+				if `tc'>0 &`th'==0{
 					local clsl=_b[`cdd']
 				  local secl=_se[`cdd']
 				  post `out' (`id') (`r2')  (`base') (`sebs') (`tc') (`clsl') (`secl') (`covar') 
 				} 
+				
+				if `tc'>0 & `th'>0 {
+				local htsl=_b[`hdd']
+				  local seht=_se[`hdd']
+				 local clsl=_b[`cdd']
+				  local secl=_se[`cdd']
+				   post `out' (`id') (`r2')  (`base') (`sebs') (`tc') (`th') (`clsl') (`htsl') (`secl') (`seht') (`covar')
+				}
 		}
 	local j=`end'+1
 	if int(`j'/10000)!=int((`j'-`np')/10000) noi di "* " _c
@@ -94,9 +109,9 @@ merge m:1 grpid using `idlist'
 drop _merge grpid
 
 * get long term average degree days
-if `th'>0 {
+if `th'>0 & `tc'==0{
 	gen tref=`th'
-	merge m:1 station tref using weather/alldds_longlt, keep(match master) keepusing(lthdd)
+	merge m:1 station tref using cz2010_alldds_longlt, keep(match master) keepusing(lthdd)
 	gen senac=365.25*sqrt((lthdd^2*sehpdd^2+2*covar*lthdd+sebs^2))
 	replace lthdd=lthdd*365.25
 	replace sebs=sebs*365.25
@@ -104,10 +119,14 @@ if `th'>0 {
 	gen nahc=hpdd*lthdd
 	gen senahc=sehpdd*lthdd
 	gen nac=base + nahc	
+	drop tref
 }
-if `tc'>0 {
+cap drop _merge
+drop if mi(`id')
+
+if `tc'>0 & `th'==0{
 	gen tref=`tc'
-	merge m:1 station tref using weather/alldds_longlt, keep(match master) keepusing(ltcdd)
+	merge m:1 station tref using cz2010_alldds_longlt, keep(match master) keepusing(ltcdd)
 	gen senac=365.25*sqrt((ltcdd^2*secpdd^2+2*covar*ltcdd+sebs^2))
 	replace ltcdd=ltcdd*365.25
 	replace sebs=sebs*365.25
@@ -115,8 +134,31 @@ if `tc'>0 {
 	gen nacc=cpdd*ltcdd
 	gen senacc=secpdd*ltcdd
 	gen nac=base + nacc
+	drop tref
 }
-drop _merge
+cap drop _merge
+drop if mi(`id')
+
+if `tc'>0 & `th'>0 {
+	gen tref=`tc'
+	merge m:1 station tref using cz2010_alldds_longlt, keep(match master) keepusing(ltcdd)
+	drop tref _merge
+	gen tref=`th'
+	merge m:1 station tref using alldds_longlt2, keep(match master) keepusing(lthdd)
+	gen senac=365.25*sqrt((ltcdd^2*secpdd^2+2*covar*ltcdd+sebs^2))
+	replace ltcdd=ltcdd*365.25
+	replace lthdd=lthdd*365.25
+	replace sebs=sebs*365.25
+	replace base=base*365.25
+	gen nacc=cpdd*ltcdd
+	gen senacc=secpdd*ltcdd
+	gen nahc=hpdd*lthdd
+	gen senahc=sehpdd*lthdd
+	gen nac=base + nacc +nahc
+	drop tref
+}
+
+cap drop _merge
 drop if mi(`id')
 
 gen cvnac=senac/nac 
@@ -128,6 +170,7 @@ if `th'>0 order `by' station nac base nahc cvnac r2 nreads begdate enddate lthdd
 if `tc'>0 order `by' station nac base nacc cvnac r2 nreads begdate enddate ltcdd sebs secpdd 
 drop covar 
 label data "prismxtf2 `model' `th'`tc' run on $S_DATE $S_TIME"
+cap drop _merge
 }
 save `saving', replace
 end
